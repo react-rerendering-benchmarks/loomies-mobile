@@ -1,9 +1,9 @@
+import { memo } from "react";
 import { iLoomie } from '@src/types/combatInterfaces';
 import { colors, images } from '@src/utils/utils';
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Grayscale } from 'react-native-color-matrix-image-filters';
-
 interface IProps {
   loomie: iLoomie;
   markIsWeakenedLoomies: boolean;
@@ -11,7 +11,6 @@ interface IProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cardCallback(_a: any): void;
 }
-
 export const LoomieCombatCard = ({
   loomie,
   markIsWeakenedLoomies,
@@ -20,12 +19,7 @@ export const LoomieCombatCard = ({
 }: IProps) => {
   // Get the color from the first type
   const mainColor = loomie.types[0].toUpperCase();
-
-  const typeColor =
-    markIsWeakenedLoomies && loomie.boosted_hp < 0
-      ? '#c8c8c8'
-      : colors[mainColor];
-
+  const typeColor = markIsWeakenedLoomies && loomie.boosted_hp < 0 ? '#c8c8c8' : colors[mainColor];
   const loomieSerial = `${loomie.serial.toString().padStart(3, '0')}`;
 
   // Function to render a border if the loomie is part of the user's team
@@ -40,55 +34,51 @@ export const LoomieCombatCard = ({
       };
     }
   };
-
-  const renderLoomieImage = () => {
+  const renderLoomieImage = memo(() => {
     if (markIsWeakenedLoomies && loomie.boosted_hp < 0) {
-      return (
-        <Grayscale>
+      return <Grayscale>
           <Image source={images[loomieSerial]} style={Styles.cardImage} />
-        </Grayscale>
-      );
+        </Grayscale>;
     } else {
       return <Image source={images[loomieSerial]} style={Styles.cardImage} />;
     }
-  };
-
-  return (
-    <View style={Styles.card}>
+  });
+  return <View style={Styles.card}>
       <Pressable onPress={() => cardCallback(loomie)}>
         {/* Inner spacing to create a gap between the elements */}
         <View style={Styles.spacing}>
-          <View
-            style={{
-              ...Styles.background,
-              ...renderBorder(),
-              backgroundColor: typeColor
-            }}
-          >
-            <Text style={{ ...Styles.loomieSerial, ...Styles.cardText }}>
+          <View style={{
+          ...Styles.background,
+          ...renderBorder(),
+          backgroundColor: typeColor
+        }}>
+            <Text style={{
+            ...Styles.loomieSerial,
+            ...Styles.cardText
+          }}>
               #{loomieSerial}
             </Text>
             <View style={Styles.cardImageBg} />
             {renderLoomieImage()}
             <View style={Styles.cardInfoContainer}>
-              <Text style={{ ...Styles.cardInfoText, ...Styles.cardText }}>
+              <Text style={{
+              ...Styles.cardInfoText,
+              ...Styles.cardText
+            }}>
                 Lvl {loomie.level}
               </Text>
-              <Text
-                style={{ ...Styles.cardInfoText, ...Styles.loomieName }}
-                numberOfLines={2}
-                ellipsizeMode='tail'
-              >
+              <Text style={{
+              ...Styles.cardInfoText,
+              ...Styles.loomieName
+            }} numberOfLines={2} ellipsizeMode='tail'>
                 {loomie.name}
               </Text>
             </View>
           </View>
         </View>
       </Pressable>
-    </View>
-  );
+    </View>;
 };
-
 const Styles = StyleSheet.create({
   card: {
     // Take the entire width of the column but prevent
@@ -115,7 +105,9 @@ const Styles = StyleSheet.create({
     height: 110,
     position: 'absolute',
     top: 24,
-    transform: [{ rotate: '35deg' }],
+    transform: [{
+      rotate: '35deg'
+    }],
     width: 110
   },
   cardImage: {

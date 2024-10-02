@@ -1,57 +1,47 @@
+import { useCallback } from "react";
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import {
-  NavigationProp,
-  RouteProp,
-  useFocusEffect
-} from '@react-navigation/core';
-import {
-  View,
-  Text,
-  Pressable,
-  Image,
-  StyleSheet,
-  BackHandler
-} from 'react-native';
+import { NavigationProp, RouteProp, useFocusEffect } from '@react-navigation/core';
+import { View, Text, Pressable, Image, StyleSheet, BackHandler } from 'react-native';
 import { TWildLoomies } from '@src/types/types';
 import { MapContext } from '@src/context/MapProvider';
 import { TLoomball } from '@src/types/types';
 import { getLoomballsService } from '@src/services/items.services';
-import {
-  CaptureLoomie3D,
-  LOOMBALL_STATE
-} from '@src/components/CaptureLoomie3D/CaptureLoomie3D';
+import { CaptureLoomie3D, LOOMBALL_STATE } from '@src/components/CaptureLoomie3D/CaptureLoomie3D';
 import { images } from '@src/utils/utils';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { APP_SCENE, BabylonContext } from '@src/context/BabylonProvider';
 import { useToastAlert } from '@src/hooks/useToastAlert';
 import { LOOMBALL_INITIAL_STATE } from '@src/components/CaptureLoomie3D/animations';
 import { SelectLoomBallModal } from '@src/components/Modals/SelectLoomBall';
-
 interface CaptureViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   navigation?: NavigationProp<any, any>;
-  route: RouteProp<{ params: { loomieId: string } }, 'params'>;
+  route: RouteProp<{
+    params: {
+      loomieId: string;
+    };
+  }, 'params'>;
 }
-
-const interactableStates = [
-  LOOMBALL_STATE.GRABBABLE,
-  LOOMBALL_STATE.ANI_GRABBED,
-  LOOMBALL_STATE.ANI_RETURNING
-];
-
-export const CaptureView = ({ navigation, route }: CaptureViewProps) => {
-  const { showInfoToast } = useToastAlert();
-
+const interactableStates = [LOOMBALL_STATE.GRABBABLE, LOOMBALL_STATE.ANI_GRABBED, LOOMBALL_STATE.ANI_RETURNING];
+export const CaptureView = ({
+  navigation,
+  route
+}: CaptureViewProps) => {
+  const {
+    showInfoToast
+  } = useToastAlert();
   const [loomie, setLoomie] = useState<TWildLoomies | null>(null);
-  const { getWildLoomies } = useContext(MapContext);
-  const { showScene } = useContext(BabylonContext);
+  const {
+    getWildLoomies
+  } = useContext(MapContext);
+  const {
+    showScene
+  } = useContext(BabylonContext);
 
   // state
 
   const [ballSelected, setBallSelected] = useState<TLoomball | null>(null);
-  const [aniState, setAniState] = useState<LOOMBALL_STATE>(
-    LOOMBALL_INITIAL_STATE
-  );
+  const [aniState, setAniState] = useState<LOOMBALL_STATE>(LOOMBALL_INITIAL_STATE);
   const [showLoomBallModal, setShowLoomBallModal] = useState(false);
   const [loombalImage, setLoombalImage] = useState<string>();
   const cleanUp = useRef<() => Promise<void>>(async () => {
@@ -60,38 +50,35 @@ export const CaptureView = ({ navigation, route }: CaptureViewProps) => {
 
   // clean up function
 
-  const setCleanUp = (newCleanUp: () => Promise<void>) => {
+  const setCleanUp = useCallback((newCleanUp: () => Promise<void>) => {
     cleanUp.current = newCleanUp;
-  };
+  }, []);
 
   // set state
 
-  const setBallState = (state: LOOMBALL_STATE) => {
+  const setBallState = useCallback((state: LOOMBALL_STATE) => {
     setAniState(state);
     console.log(`Info: Capture animation state: ${state}`);
-
     switch (state) {
       // decrease loomball quantity
 
-      case LOOMBALL_STATE.ANI_THROW: {
-        // update ball quantity
+      case LOOMBALL_STATE.ANI_THROW:
+        {
+          // update ball quantity
 
-        let currBall: TLoomball | null = null;
-
-        setBallSelected((ball) => {
-          currBall = ball;
-          return ball;
-        });
-
-        if (currBall) {
-          if ((currBall as TLoomball).quantity > 0) {
-            (currBall as TLoomball).quantity -= 1;
-            setBallSelected(currBall);
+          let currBall: TLoomball | null = null;
+          setBallSelected(ball => {
+            currBall = ball;
+            return ball;
+          });
+          if (currBall) {
+            if ((currBall as TLoomball).quantity > 0) {
+              (currBall as TLoomball).quantity -= 1;
+              setBallSelected(currBall);
+            }
           }
+          break;
         }
-
-        break;
-      }
 
       // refresh user Loomballs on escape
 
@@ -99,7 +86,7 @@ export const CaptureView = ({ navigation, route }: CaptureViewProps) => {
         fetchLoomballs();
         break;
     }
-  };
+  }, [setBallSelected, setAniState]);
 
   // fetch user loomballs
 
@@ -111,16 +98,14 @@ export const CaptureView = ({ navigation, route }: CaptureViewProps) => {
       if (!loomballs.length) {
         // clean
         await cleanUp.current();
-
         navigation?.navigate('Map');
         showInfoToast("You don't have any Loomballs to catch this Loomie");
       }
 
       // still has balls of this kind available?
       let available = false;
-
       if (ballSelected) {
-        available = loomballs.some((ball) => {
+        available = loomballs.some(ball => {
           return ball._id == ballSelected._id;
         });
       }
@@ -137,22 +122,19 @@ export const CaptureView = ({ navigation, route }: CaptureViewProps) => {
 
   //update ballSelected
 
-  const updateSelectLoomBall = (loomBall: TLoomball) => {
+  const updateSelectLoomBall = useCallback((loomBall: TLoomball) => {
     setBallSelected(loomBall);
-  };
-
+  }, [setBallSelected]);
   const escape = async () => {
     // clean
     await cleanUp.current();
-
     navigation?.navigate('Map');
   };
-
   useEffect(() => {
     // get loomie
 
     const wildLoomies = getWildLoomies();
-    const foundLoomie = wildLoomies.find((wild) => {
+    const foundLoomie = wildLoomies.find(wild => {
       return wild._id == route.params.loomieId;
     });
 
@@ -162,51 +144,29 @@ export const CaptureView = ({ navigation, route }: CaptureViewProps) => {
       escape();
       return;
     }
-
     setLoomie(foundLoomie);
     fetchLoomballs();
   }, [ballSelected]);
 
   // toggle render loop on focus events
-  useFocusEffect(
-    React.useCallback(() => {
-      // prevent user from going back
+  useFocusEffect(React.useCallback(() => {
+    // prevent user from going back
 
-      const subscription = BackHandler.addEventListener(
-        'hardwareBackPress',
-        () => true
-      );
-
-      return () => {
-        subscription.remove();
-        showScene(APP_SCENE.NONE);
-      };
-    }, [])
-  );
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => {
+      subscription.remove();
+      showScene(APP_SCENE.NONE);
+    };
+  }, []));
 
   //Visibility from LoomBall modal
-  const toggleItemModalVisibility = () => {
-    setShowLoomBallModal(!showLoomBallModal);
-  };
-
-  return (
-    <View style={styles.container}>
-      {showLoomBallModal && (
-        <SelectLoomBallModal
-          isVisible={showLoomBallModal}
-          toggleVisibilityCallback={toggleItemModalVisibility}
-          submitCallback={updateSelectLoomBall}
-        />
-      )}
+  const toggleItemModalVisibility = useCallback(() => {
+    setShowLoomBallModal(showLoomBallModalCurrent => !showLoomBallModalCurrent);
+  }, [setShowLoomBallModal]);
+  return <View style={styles.container}>
+      {showLoomBallModal && <SelectLoomBallModal isVisible={showLoomBallModal} toggleVisibilityCallback={toggleItemModalVisibility} submitCallback={updateSelectLoomBall} />}
       <View style={styles.scene}>
-        {loomie && ballSelected && (
-          <CaptureLoomie3D
-            loomie={loomie}
-            loomball={ballSelected}
-            setBallState={setBallState}
-            setCleanUp={setCleanUp}
-          />
-        )}
+        {loomie && ballSelected && <CaptureLoomie3D loomie={loomie} loomball={ballSelected} setBallState={setBallState} setCleanUp={setCleanUp} />}
       </View>
 
       {/* header */}
@@ -214,47 +174,38 @@ export const CaptureView = ({ navigation, route }: CaptureViewProps) => {
       {loomie && <Text style={styles.title}>{loomie.name}</Text>}
       {loomie && <Text style={styles.subtitle}>Level {loomie.level}</Text>}
 
-      {interactableStates.some((i) => i == aniState) && (
-        <>
+      {interactableStates.some(i => i == aniState) && <>
           {/* loomball bubble */}
-          <Pressable
-            style={styles.bubbleLoomball}
-            onPress={() => {
-              toggleItemModalVisibility();
-            }}
-          >
-            <Image
-              style={{ width: 70, height: 70 }}
-              source={images[`O-${loombalImage}`]}
-            />
+          <Pressable style={styles.bubbleLoomball} onPress={() => {
+        toggleItemModalVisibility();
+      }}>
+            <Image style={{
+          width: 70,
+          height: 70
+        }} source={images[`O-${loombalImage}`]} />
           </Pressable>
 
-          <Pressable
-            style={styles.bubbleLoomballAmount}
-            onPress={() => {
-              toggleItemModalVisibility();
-            }}
-          >
-            <Text style={{ color: 'black' }}>
+          <Pressable style={styles.bubbleLoomballAmount} onPress={() => {
+        toggleItemModalVisibility();
+      }}>
+            <Text style={{
+          color: 'black'
+        }}>
               {ballSelected ? ballSelected.quantity : ''}
             </Text>
           </Pressable>
 
           {/* scape bubble */}
           <Pressable style={styles.bubbleEscape} onPress={escape}>
-            <MaterialCommunityIcons
-              size={30}
-              name={'run'}
-              color={'white'}
-              style={{ transform: [{ scaleX: -1 }] }}
-            />
+            <MaterialCommunityIcons size={30} name={'run'} color={'white'} style={{
+          transform: [{
+            scaleX: -1
+          }]
+        }} />
           </Pressable>
-        </>
-      )}
-    </View>
-  );
+        </>}
+    </View>;
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -273,7 +224,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#ED4A5F',
     position: 'absolute',
     top: -160,
-    transform: [{ scaleX: 2 }]
+    transform: [{
+      scaleX: 2
+    }]
   },
   title: {
     position: 'absolute',

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { images } from '@src/utils/utils';
 import React, { useContext } from 'react';
 import Modal from 'react-native-modal';
@@ -5,31 +6,18 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { CustomButton } from '@src/components/CustomButton';
 import { MapModalsContext } from '@src/context/MapModalsProvider';
 import { LoomieRarityTag } from '../../LoomieDetails/LoomieRarityTag';
-
-export const ModalCongratsCapture = () => {
+export const ModalCongratsCapture = memo(() => {
   const {
     isCongratsModalOpen,
     toggleCongratsModalVisibility,
     currentModalCapturedInfo
   } = useContext(MapModalsContext);
-
   const loomieCaptured = currentModalCapturedInfo;
-
-  if (loomieCaptured)
-    return (
-      <Modal
-        isVisible={isCongratsModalOpen}
-        onBackdropPress={toggleCongratsModalVisibility}
-      >
+  if (loomieCaptured) return <Modal isVisible={isCongratsModalOpen} onBackdropPress={toggleCongratsModalVisibility}>
         <View style={Styles.container}>
           <View style={Styles.modal}>
             <Text style={Styles.modalTitle}>CONGRATULATIONS!</Text>
-            <Image
-              source={
-                images[`${loomieCaptured?.serial}`.toString().padStart(3, '0')]
-              }
-              style={Styles.cardImage}
-            />
+            <Image source={images[`${loomieCaptured?.serial}`.toString().padStart(3, '0')]} style={Styles.cardImage} />
             <View style={Styles.modalText}>
               <Text style={[Styles.boldText, Styles.modalText]}>
                 You have captured:
@@ -41,19 +29,13 @@ export const ModalCongratsCapture = () => {
               <LoomieRarityTag rarity={loomieCaptured.rarity} />
             </View>
             <View style={Styles.containerButton}>
-              <CustomButton
-                title='Accept'
-                type='primary'
-                callback={toggleCongratsModalVisibility}
-              />
+              <CustomButton title='Accept' type='primary' callback={toggleCongratsModalVisibility} />
             </View>
           </View>
         </View>
-      </Modal>
-    );
+      </Modal>;
   return <></>;
-};
-
+});
 const Styles = StyleSheet.create({
   container: {
     flex: 1,

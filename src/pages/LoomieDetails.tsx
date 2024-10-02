@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { RouteProp, useFocusEffect } from '@react-navigation/core';
 import { TCaughtLoomieToRender } from '@src/types/types';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -10,20 +11,24 @@ import { APP_SCENE, BabylonContext } from '@src/context/BabylonProvider';
 import { Loomie3DModelPreview } from '@src/components/LoomieDetails/Loomie3DModelPreview';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FuseLoomiesModal } from '@src/components/Modals/FuseLoomiesModal';
-
 interface IProps {
-  route?: RouteProp<{ params: { loomie: TCaughtLoomieToRender } }, 'params'>;
+  route?: RouteProp<{
+    params: {
+      loomie: TCaughtLoomieToRender;
+    };
+  }, 'params'>;
 }
-
-export const LoomieDetails = ({ route }: IProps) => {
+export const LoomieDetails = ({
+  route
+}: IProps) => {
   const [showFuseModal, setShowFuseModal] = useState(false);
   const [loomie, setLoomie] = useState<TCaughtLoomieToRender | null>(null);
-  const { showScene } = useContext(BabylonContext);
-
-  const toggleFuseModalVisibility = () => {
-    setShowFuseModal(!showFuseModal);
-  };
-
+  const {
+    showScene
+  } = useContext(BabylonContext);
+  const toggleFuseModalVisibility = useCallback(() => {
+    setShowFuseModal(showFuseModalCurrent => !showFuseModalCurrent);
+  }, [setShowFuseModal]);
   useEffect(() => {
     // Try to get the loomie from the route params
     const loomieFromRoute = route?.params?.loomie;
@@ -31,35 +36,22 @@ export const LoomieDetails = ({ route }: IProps) => {
   }, []);
 
   // toggle render loop on focus events
-  useFocusEffect(
-    React.useCallback(() => {
-      showScene(APP_SCENE.DETAILS);
-      return () => showScene(APP_SCENE.NONE);
-    }, [])
-  );
-
+  useFocusEffect(React.useCallback(() => {
+    showScene(APP_SCENE.DETAILS);
+    return () => showScene(APP_SCENE.NONE);
+  }, []));
   if (!loomie) return null;
   const mainColor = loomie.types[0].toUpperCase();
   const typeColor = colors[mainColor];
-
-  return (
-    <>
-      {showFuseModal && (
-        <FuseLoomiesModal
-          isVisible={showFuseModal}
-          selectedLoomie={loomie}
-          toggleVisibilityCallback={toggleFuseModalVisibility}
-        />
-      )}
-      <View style={{ ...Styles.background, backgroundColor: typeColor }}>
-        {loomie.is_busy == false && (
-          <Pressable
-            style={Styles.fuseFloatingButton}
-            onPress={toggleFuseModalVisibility}
-          >
+  return <>
+      {showFuseModal && <FuseLoomiesModal isVisible={showFuseModal} selectedLoomie={loomie} toggleVisibilityCallback={toggleFuseModalVisibility} />}
+      <View style={{
+      ...Styles.background,
+      backgroundColor: typeColor
+    }}>
+        {loomie.is_busy == false && <Pressable style={Styles.fuseFloatingButton} onPress={toggleFuseModalVisibility}>
             <MaterialCommunityIcon name='merge' color={'white'} size={32} />
-          </Pressable>
-        )}
+          </Pressable>}
         <View style={Styles.scenario}>
           <Loomie3DModelPreview serial={loomie.serial} color={typeColor} />
         </View>
@@ -70,23 +62,12 @@ export const LoomieDetails = ({ route }: IProps) => {
           <View style={Styles.row}>
             <LoomieTypes types={loomie.types} />
           </View>
-          <LoomieLevelBar
-            level={loomie.level}
-            experience={loomie.experience}
-            color={typeColor}
-          />
-          <LoomieStatsTable
-            level={loomie.level}
-            hp={loomie.hp}
-            defense={loomie.defense}
-            attack={loomie.attack}
-          />
+          <LoomieLevelBar level={loomie.level} experience={loomie.experience} color={typeColor} />
+          <LoomieStatsTable level={loomie.level} hp={loomie.hp} defense={loomie.defense} attack={loomie.attack} />
         </View>
       </View>
-    </>
-  );
+    </>;
 };
-
 const Styles = StyleSheet.create({
   background: {
     flex: 1,

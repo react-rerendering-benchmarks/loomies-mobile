@@ -1,8 +1,8 @@
+import { memo } from "react";
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
-
 interface IProps {
   onPress: () => void;
   collection: string;
@@ -10,33 +10,29 @@ interface IProps {
   bottom: number;
   right: number;
 }
-
-export const FloatingRedIcon = ({
+export const FloatingRedIcon = memo(({
   onPress,
   collection,
   name,
   bottom,
   right
 }: IProps) => {
-  const getIcon = () => {
+  const getIcon = memo(() => {
     switch (collection) {
       case 'MaterialCommunityIcons':
         return <MaterialCommunityIcon name={name} size={36} color='white' />;
       case 'MaterialIcons':
         return <MaterialIcon name={name} size={36} color='white' />;
     }
-  };
-
-  return (
-    <Pressable
-      style={{ ...Styles.floatingButton, bottom, right }}
-      onTouchEnd={onPress}
-    >
+  });
+  return <Pressable style={{
+    ...Styles.floatingButton,
+    bottom,
+    right
+  }} onTouchEnd={onPress}>
       {getIcon()}
-    </Pressable>
-  );
-};
-
+    </Pressable>;
+});
 const Styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',

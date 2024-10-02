@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import React, { useEffect, useState } from 'react';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
@@ -8,73 +9,58 @@ import { CustomButton } from '../components/CustomButton';
 import { LinkCard } from '../components/LinkCard';
 import { LogoutConfirmationModal } from '@src/components/Modals/LogoutConfirmationModal';
 import { useAuth } from '@src/hooks/useAuth';
-
 interface ProfileProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   navigation: NavigationProp<any, any>;
 }
-
-export const Profile = ({ navigation }: ProfileProps) => {
+export const Profile = ({
+  navigation
+}: ProfileProps) => {
   const isFocused = useIsFocused();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { user } = useContext(AuthContext);
-  const { logout, isAuthenticated, isLoading } = useAuth();
-
+  const {
+    user
+  } = useContext(AuthContext);
+  const {
+    logout,
+    isAuthenticated,
+    isLoading
+  } = useAuth();
   useEffect(() => {
     if (isFocused && !isLoading && !isAuthenticated()) {
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Login' }]
+        routes: [{
+          name: 'Login'
+        }]
       });
     }
   }, [isFocused]);
-
-  const redirectToResetPassword = () => {
+  const redirectToResetPassword = useCallback(() => {
     navigation.navigate('ResetPassword');
-  };
-
-  const toggleLogoutModalVisibility = () => {
-    setShowLogoutModal(!showLogoutModal);
-  };
-
-  return (
-    <>
-      <LogoutConfirmationModal
-        isVisible={showLogoutModal}
-        toggleVisibilityCallback={toggleLogoutModalVisibility}
-        acceptCallback={logout}
-      />
+  }, []);
+  const toggleLogoutModalVisibility = useCallback(() => {
+    setShowLogoutModal(showLogoutModalCurrent => !showLogoutModalCurrent);
+  }, [setShowLogoutModal]);
+  return <>
+      <LogoutConfirmationModal isVisible={showLogoutModal} toggleVisibilityCallback={toggleLogoutModalVisibility} acceptCallback={logout} />
       <View style={Styles.container}>
         <View style={Styles.header}>
           <Text style={Styles.headerTitle}>PROFILE</Text>
         </View>
         <View style={Styles.main}>
-          <Text
-            style={[Styles.mainTitle, Styles.mainTitleBold]}
-            numberOfLines={1}
-            ellipsizeMode='tail'
-          >
+          <Text style={[Styles.mainTitle, Styles.mainTitleBold]} numberOfLines={1} ellipsizeMode='tail'>
             {user?.username}
           </Text>
-          <LinkCard
-            iconName='lock'
-            displayText='Reset Password'
-            callback={redirectToResetPassword}
-          />
+          <LinkCard iconName='lock' displayText='Reset Password' callback={redirectToResetPassword} />
           <View style={Styles.form}>
             {/* todo */}
-            <CustomButton
-              title='Log Out'
-              type='primary'
-              callback={toggleLogoutModalVisibility}
-            />
+            <CustomButton title='Log Out' type='primary' callback={toggleLogoutModalVisibility} />
           </View>
         </View>
       </View>
-    </>
-  );
+    </>;
 };
-
 const Styles = StyleSheet.create({
   container: {
     flex: 1

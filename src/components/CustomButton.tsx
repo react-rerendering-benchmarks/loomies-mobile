@@ -1,34 +1,35 @@
+import { memo } from "react";
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-
 type ButtonTypes = 'primary' | 'bordered';
-
 interface IProps {
   title: string;
   type: ButtonTypes;
   callback: () => void;
 }
-
-export const CustomButton = ({ title, type, callback }: IProps) => {
-  return (
-    <Pressable style={GetButtonStyles(type)} onPress={() => callback()}>
+export const CustomButton = memo(({
+  title,
+  type,
+  callback
+}: IProps) => {
+  return <Pressable style={GetButtonStyles(type)} onPress={() => callback()}>
       <Text style={GetButtonTextStyles(type)}>{title}</Text>
-    </Pressable>
-  );
-};
+    </Pressable>;
+});
 
 // Get the styles for the button based on the type,
 // This is an easily extensible pattern that allows you to add more button types
 const GetButtonStyles = (type: ButtonTypes) => {
   let instanceStyles;
-
   if (type === 'primary') {
     instanceStyles = Styles.buttonPrimary;
   } else if (type === 'bordered') {
     instanceStyles = Styles.buttonBordered;
   }
-
-  return { ...Styles.button, ...instanceStyles };
+  return {
+    ...Styles.button,
+    ...instanceStyles
+  };
 };
 
 // Get the styles for the button text based on the type
@@ -39,7 +40,6 @@ const GetButtonTextStyles = (type: ButtonTypes) => {
     return Styles.buttonTextBordered;
   }
 };
-
 const Styles = StyleSheet.create({
   button: {
     alignItems: 'center',

@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import React, { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFormik } from 'formik';
@@ -6,15 +7,22 @@ import { CustomButton } from '../components/CustomButton';
 import { NavigationProp } from '@react-navigation/core';
 import { useAuth } from '../hooks/useAuth';
 import { useToastAlert } from '../hooks/useToastAlert';
-
 interface LoginProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   navigation: NavigationProp<any, any>;
 }
-
-export const Login = ({ navigation }: LoginProps) => {
-  const { login, isAuthenticated, isLoading } = useAuth();
-  const { showInfoToast, showErrorToast } = useToastAlert();
+export const Login = ({
+  navigation
+}: LoginProps) => {
+  const {
+    login,
+    isAuthenticated,
+    isLoading
+  } = useAuth();
+  const {
+    showInfoToast,
+    showErrorToast
+  } = useToastAlert();
 
   // Redirects to the map view if the user is already authenticated
   useEffect(() => {
@@ -22,21 +30,25 @@ export const Login = ({ navigation }: LoginProps) => {
       showInfoToast('You are already logged in');
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Map' }]
+        routes: [{
+          name: 'Map'
+        }]
       });
     }
   }, [isLoading]);
-
   const redirectToSignup = () => {
     navigation.navigate('Signup');
   };
-  const redirectToEmailVal = () => {
-    navigation.navigate('EmailValidation', { email: formik.values.email });
-  };
+  const redirectToEmailVal = useCallback(() => {
+    navigation.navigate('EmailValidation', {
+      email: formik.values.email
+    });
+  }, []);
   const redirectToResetPassword = () => {
-    navigation.navigate('ResetPassword', { email: formik.values.email });
+    navigation.navigate('ResetPassword', {
+      email: formik.values.email
+    });
   };
-
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -46,56 +58,30 @@ export const Login = ({ navigation }: LoginProps) => {
       email: Yup.string().email().required(),
       password: Yup.string().required()
     }),
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       const [response, error] = await login(values.email, values.password);
-
       if (error && response?.message) {
         showErrorToast(response?.message);
       }
     }
   });
-
-  return (
-    <View style={Styles.container}>
+  return <View style={Styles.container}>
       <View style={Styles.header}>
         <Text style={Styles.headerTitle}>Login</Text>
       </View>
       <View style={Styles.footer}>
         <View style={Styles.form}>
-          <TextInput
-            style={Styles.formField}
-            placeholderTextColor={'#9C9C9C'}
-            placeholder='Email'
-            autoCapitalize='none'
-            value={formik.values.email}
-            onChangeText={formik.handleChange('email')}
-          />
+          <TextInput style={Styles.formField} placeholderTextColor={'#9C9C9C'} placeholder='Email' autoCapitalize='none' value={formik.values.email} onChangeText={formik.handleChange('email')} />
           {/* Shows the email validation error if exists */}
-          {formik.errors.email && (
-            <Text style={Styles.formError}>*{formik.errors.email}</Text>
-          )}
-          <TextInput
-            style={{ ...Styles.formField, marginTop: 8 }}
-            placeholderTextColor={'#9C9C9C'}
-            placeholder='********'
-            secureTextEntry={true}
-            value={formik.values.password}
-            onChangeText={formik.handleChange('password')}
-          />
+          {formik.errors.email && <Text style={Styles.formError}>*{formik.errors.email}</Text>}
+          <TextInput style={{
+          ...Styles.formField,
+          marginTop: 8
+        }} placeholderTextColor={'#9C9C9C'} placeholder='********' secureTextEntry={true} value={formik.values.password} onChangeText={formik.handleChange('password')} />
           {/* Shows the password validation error if exists */}
-          {formik.errors.password && (
-            <Text style={Styles.formError}>*{formik.errors.password}</Text>
-          )}
-          <CustomButton
-            title='Login'
-            type='primary'
-            callback={formik.handleSubmit}
-          />
-          <CustomButton
-            title='Validate account'
-            type='primary'
-            callback={redirectToEmailVal}
-          />
+          {formik.errors.password && <Text style={Styles.formError}>*{formik.errors.password}</Text>}
+          <CustomButton title='Login' type='primary' callback={formik.handleSubmit} />
+          <CustomButton title='Validate account' type='primary' callback={redirectToEmailVal} />
         </View>
         <View style={Styles.redirect}>
           <Pressable onPress={redirectToSignup}>
@@ -110,10 +96,8 @@ export const Login = ({ navigation }: LoginProps) => {
           </Pressable>
         </View>
       </View>
-    </View>
-  );
+    </View>;
 };
-
 const Styles = StyleSheet.create({
   container: {
     flex: 1
