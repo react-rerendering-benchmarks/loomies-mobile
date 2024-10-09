@@ -1,8 +1,6 @@
-import {
-  getLoomieTeamService,
-  putLoomieTeam,
-  getLoomiesRequest
-} from '@src/services/loomies.services';
+import { useRef } from "react";
+import { useCallback } from "react";
+import { getLoomieTeamService, putLoomieTeam, getLoomiesRequest } from '@src/services/loomies.services';
 import { TCaughtLoomies, TCaughtLoomieToRender } from '@src/types/types';
 import React, { useEffect, useState } from 'react';
 import { LoomiesGrid } from '@src/components/CaughtLoomiesGrid/LoomiesGrid';
@@ -12,28 +10,28 @@ import { LoomiesGridSkeleton } from '@src/skeletons/CaughtLoomiesGrid/LoomiesGri
 import { View } from 'react-native';
 import { useToastAlert } from '@src/hooks/useToastAlert';
 import { FloatingRedIcon } from '@src/components/FloatingRedIcon';
-
 interface IProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   navigation: NavigationProp<any>;
 }
-
-export const UpdateLoomieTeamView = ({ navigation }: IProps) => {
-  const { showErrorToast, showSuccessToast } = useToastAlert();
+export const UpdateLoomieTeamView = ({
+  navigation
+}: IProps) => {
+  const {
+    showErrorToast,
+    showSuccessToast
+  } = useToastAlert();
   const [loomies, setLoomies] = useState(Array<TCaughtLoomieToRender>);
-  const [team, setTeam] = useState(Array<string>);
+  const team = useRef(Array<string>);
   const [loading, setLoading] = useState(true);
   const focused = useIsFocused();
-
   const getLoomieTeam = async () => {
     const [response, error] = await getLoomieTeamService();
     if (error) return;
-
     const loomies = response.team;
     const ids = loomies.map((loomie: TCaughtLoomies) => loomie._id);
-    setTeam(ids);
+    team.current = ids;
   };
-
   const getLoomies = async () => {
     let currentLoomies: TCaughtLoomies[];
 
@@ -41,22 +39,19 @@ export const UpdateLoomieTeamView = ({ navigation }: IProps) => {
     if (!loomies || loomies.length === 0) {
       const [response, error] = await getLoomiesRequest();
       if (error || !response.loomies || response.loomies.length == 0) return;
-
       const responseLoomies: TCaughtLoomies[] = response.loomies;
       currentLoomies = responseLoomies;
     } else {
       currentLoomies = loomies;
     }
-
-    const loomiesWithTeamProperty = currentLoomies.map((loomie) => {
-      const isTeamLoomie = team.includes(loomie._id);
+    const loomiesWithTeamProperty = currentLoomies.map(loomie => {
+      const isTeamLoomie = team.current.includes(loomie._id);
       return {
         ...loomie,
         is_in_team: isTeamLoomie,
         is_selected: isTeamLoomie
       };
     });
-
     setLoomies(loomiesWithTeamProperty);
     setLoading(false);
   };
@@ -70,77 +65,51 @@ export const UpdateLoomieTeamView = ({ navigation }: IProps) => {
   // When the team is obtained, we get the loomies
   useEffect(() => {
     getLoomies();
-  }, [team]);
-
-  const handleLoomiePress = (loomieId: string) => {
+  }, [team.current]);
+  const handleLoomiePress = useCallback((loomieId: string) => {
     // If the loomie is busy, ignore the action
-    const loomie = loomies.find((loomie) => loomie._id === loomieId);
+    const loomie = loomies.find(loomie => loomie._id === loomieId);
     if (!loomie || loomie.is_busy) return;
-
-    if (team.includes(loomieId)) {
+    if (team.current.includes(loomieId)) {
       // If the loomie is already in the team, remove it
-      const newTeam = team.filter((id) => id !== loomieId);
-      setTeam(newTeam);
+      const newTeam = team.current.filter(id => id !== loomieId);
+      team.current = newTeam;
       return;
-    } else if (team.length >= 6) {
+    } else if (team.current.length >= 6) {
       // If the team is full, remove the first loomie and add the new one
-      const newTeam = [...team.slice(1), loomieId];
-      setTeam(newTeam);
+      const newTeam = [...team.current.slice(1), loomieId];
+      team.current = newTeam;
     } else {
       // If the loomie is not in the team, add it
-      const newTeam = [...team, loomieId];
-      setTeam(newTeam);
+      const newTeam = [...team.current, loomieId];
+      team.current = newTeam;
     }
-  };
-
-  const handleSave = async () => {
-    if (team.length == 0) {
+  }, [loomie, loomies, team, setTeam]);
+  const handleSave = useCallback(async () => {
+    if (team.current.length == 0) {
       showErrorToast('You must select at least one loomie to save your team');
       return;
-    } else if (team.length > 6) {
+    } else if (team.current.length > 6) {
       showErrorToast('You can only select up to 6 loomies');
       return;
     }
-
-    const [response, error] = await putLoomieTeam(team);
-
+    const [response, error] = await putLoomieTeam(team.current);
     if (error) {
-      showErrorToast(
-        response['message'] ||
-          'There was an error saving your team, please try again later'
-      );
+      showErrorToast(response['message'] || 'There was an error saving your team, please try again later');
     } else {
-      showSuccessToast(
-        response['message'] || 'Your team was saved successfully'
-      );
-
-      navigation.navigate('Application', { screen: 'LoomieTeamView' });
+      showSuccessToast(response['message'] || 'Your team was saved successfully');
+      navigation.navigate('Application', {
+        screen: 'LoomieTeamView'
+      });
     }
-  };
-
-  return (
-    <View style={{ position: 'relative', flex: 1 }}>
+  }, [team]);
+  return <View style={{
+    position: 'relative',
+    flex: 1
+  }}>
       <Container>
-        {loading ? (
-          <LoomiesGridSkeleton />
-        ) : (
-          <LoomiesGrid
-            loomies={loomies}
-            markBusyLoomies={true}
-            markSelectedLoomies={true}
-            elementsCallback={handleLoomiePress}
-          />
-        )}
+        {loading ? <LoomiesGridSkeleton /> : <LoomiesGrid loomies={loomies} markBusyLoomies={true} markSelectedLoomies={true} elementsCallback={handleLoomiePress} />}
       </Container>
-      {!loading && loomies.length > 0 && (
-        <FloatingRedIcon
-          onPress={handleSave}
-          collection='MaterialCommunityIcons'
-          name='content-save'
-          bottom={16}
-          right={16}
-        />
-      )}
-    </View>
-  );
+      {!loading && loomies.length > 0 && <FloatingRedIcon onPress={handleSave} collection='MaterialCommunityIcons' name='content-save' bottom={16} right={16} />}
+    </View>;
 };

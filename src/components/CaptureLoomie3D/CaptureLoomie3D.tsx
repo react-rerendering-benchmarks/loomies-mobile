@@ -1,3 +1,4 @@
+import { memo } from "react";
 /*
  * CaptureLoomie3D:
  *
@@ -9,32 +10,27 @@ import React, { useContext, useEffect, useRef } from 'react';
 import { SafeAreaView, View } from 'react-native';
 import * as Babylon from '@babylonjs/core';
 import { EngineView } from '@babylonjs/react-native';
-
-import {
-  CAPTURE_RESULT,
-  requestCaptureLoomieAttempt
-} from '@src/services/capture.services';
+import { CAPTURE_RESULT, requestCaptureLoomieAttempt } from '@src/services/capture.services';
 import { APP_SCENE, BabylonContext } from '@src/context/BabylonProvider';
 import { ModelContext } from '@src/context/ModelProvider';
 import { UserPositionContext } from '@src/context/UserPositionProvider';
 import { useRegisterBeforeRender } from '@src/hooks/useRegisterBeforeRender';
 import { useScenePointerObservable } from '@src/hooks/useScenePointerObservable';
-
 import { TLoomball, TWildLoomies } from '@src/types/types';
 import { CaptureSM } from './CaptureSM';
 import { CONFIG } from '@src/services/config.services';
 import { MapContext } from '@src/context/MapProvider';
 import { MapModalsContext } from '@src/context/MapModalsProvider';
 import { closeXRSession } from './utilsAnimations';
-const { MAP_DEBUG } = CONFIG;
-
+const {
+  MAP_DEBUG
+} = CONFIG;
 interface iCaptureLoomie3D {
   loomie: TWildLoomies;
   loomball: TLoomball;
   setBallState: (_state: LOOMBALL_STATE) => void;
   setCleanUp: (cleanUp: () => Promise<void>) => void;
 }
-
 export const enum LOOMBALL_STATE {
   NONE,
   GRABBABLE,
@@ -44,25 +40,32 @@ export const enum LOOMBALL_STATE {
   ANI_FALL,
   ANI_STRUGGLE,
   ANI_CAPTURED,
-  ANI_ESCAPED
+  ANI_ESCAPED,
 }
-
-export const CaptureLoomie3D = ({
+export const CaptureLoomie3D = memo(({
   loomie,
   loomball,
   setBallState,
   setCleanUp
 }: iCaptureLoomie3D) => {
-  const { sceneCapture, cameraCapture, getCurrentScene } =
-    useContext(BabylonContext);
-  const { showScene } = useContext(BabylonContext);
-  const { userPosition } = useContext(UserPositionContext);
-
+  const {
+    sceneCapture,
+    cameraCapture,
+    getCurrentScene
+  } = useContext(BabylonContext);
+  const {
+    showScene
+  } = useContext(BabylonContext);
+  const {
+    userPosition
+  } = useContext(UserPositionContext);
   const babylonContext = useContext(BabylonContext);
   const modelContext = useContext(ModelContext);
   const userPositionContext = useContext(UserPositionContext);
   const mapContext = useContext(MapContext);
-  const { setCurrentModalCapturedInfo } = useContext(MapModalsContext);
+  const {
+    setCurrentModalCapturedInfo
+  } = useContext(MapModalsContext);
 
   // stores the loomball state
 
@@ -70,68 +73,47 @@ export const CaptureLoomie3D = ({
 
   // frame
 
-  useRegisterBeforeRender(
-    sceneCapture,
-    () => {
-      if (!stateMachine.current) return;
-
-      const state = stateMachine.current.stt.state;
-      const controller = stateMachine.current.controllers.get(state);
-
-      if (controller?.frame) {
-        const callback = controller.frame;
-
-        callback(stateMachine.current.stt);
-      }
-    },
-    stateMachine.current?.stt.state
-      ? stateMachine.current.stt.state.toString()
-      : undefined
-  );
+  useRegisterBeforeRender(sceneCapture, () => {
+    if (!stateMachine.current) return;
+    const state = stateMachine.current.stt.state;
+    const controller = stateMachine.current.controllers.get(state);
+    if (controller?.frame) {
+      const callback = controller.frame;
+      callback(stateMachine.current.stt);
+    }
+  }, stateMachine.current?.stt.state ? stateMachine.current.stt.state.toString() : undefined);
 
   // pointer events
 
-  if (sceneCapture)
-    useScenePointerObservable(
-      sceneCapture,
-      (pointerInfo: Babylon.PointerInfo) => {
-        if (!stateMachine.current) return;
+  if (sceneCapture) useScenePointerObservable(sceneCapture, (pointerInfo: Babylon.PointerInfo) => {
+    if (!stateMachine.current) return;
+    switch (pointerInfo.type) {
+      // pointer down
 
-        switch (pointerInfo.type) {
-          // pointer down
+      case Babylon.PointerEventTypes.POINTERDOWN:
+        stateMachine.current.onPointerDown(pointerInfo);
+        break;
 
-          case Babylon.PointerEventTypes.POINTERDOWN:
-            stateMachine.current.onPointerDown(pointerInfo);
-            break;
+      // pointer up
 
-          // pointer up
+      case Babylon.PointerEventTypes.POINTERUP:
+        stateMachine.current.onPointerUp(pointerInfo);
+        break;
 
-          case Babylon.PointerEventTypes.POINTERUP:
-            stateMachine.current.onPointerUp(pointerInfo);
-            break;
+      // pointer move
 
-          // pointer move
-
-          case Babylon.PointerEventTypes.POINTERMOVE: {
-            stateMachine.current.onPointerMove(pointerInfo);
-            break;
-          }
+      case Babylon.PointerEventTypes.POINTERMOVE:
+        {
+          stateMachine.current.onPointerMove(pointerInfo);
+          break;
         }
-      }
-    );
-
-  const attemptToCatch = async (): Promise<
-    [CAPTURE_RESULT, TWildLoomies | null]
-  > => {
+    }
+  });
+  const attemptToCatch = async (): Promise<[CAPTURE_RESULT, TWildLoomies | null]> => {
     if (userPosition) {
-      const captured = await requestCaptureLoomieAttempt(
-        userPosition,
-        loomie._id,
-        loomball._id
-      );
-
+      const captured = await requestCaptureLoomieAttempt(userPosition, loomie._id, loomball._id);
       if (captured === CAPTURE_RESULT.CAPTURED) {
-        setCurrentModalCapturedInfo(loomie as TWildLoomies);
+        setCurrentModalCapturedInfo((loomie as TWildLoomies));
       }
       return [captured, loomie];
     }
@@ -146,76 +128,41 @@ export const CaptureLoomie3D = ({
 
     // create scene
     if (!stateMachine.current) {
-      stateMachine.current = new CaptureSM(
-        sceneCapture,
-        cameraCapture,
-        babylonContext,
-        modelContext,
-        userPositionContext,
-        mapContext,
-
-        attemptToCatch,
-        setBallState
-      );
-
+      stateMachine.current = new CaptureSM(sceneCapture, cameraCapture, babylonContext, modelContext, userPositionContext, mapContext, attemptToCatch, setBallState);
       stateMachine.current.setup(loomie.serial, loomball);
     }
 
     // update
     else {
       console.log('Info: Updating SM props');
-      stateMachine.current.updateProps(
-        sceneCapture,
-        cameraCapture,
-        babylonContext,
-        modelContext,
-        userPositionContext,
-        mapContext,
-        loomball,
-
-        attemptToCatch,
-        setBallState
-      );
+      stateMachine.current.updateProps(sceneCapture, cameraCapture, babylonContext, modelContext, userPositionContext, mapContext, loomball, attemptToCatch, setBallState);
     }
 
     // update cleanUp function
 
     if (stateMachine.current != null) {
       setCleanUp(async () => {
-        stateMachine.current != null &&
-          (await closeXRSession(stateMachine.current.stt));
+        stateMachine.current != null && (await closeXRSession(stateMachine.current.stt));
       });
     }
-
     return () => {
       // destroy everything
     };
-  }, [
-    sceneCapture,
-    cameraCapture,
-    babylonContext,
-    modelContext,
-    userPosition,
-    mapContext,
-    loomball,
-
-    attemptToCatch,
-    setBallState
-  ]);
+  }, [sceneCapture, cameraCapture, babylonContext, modelContext, userPosition, mapContext, loomball, attemptToCatch, setBallState]);
 
   // toggle scene
 
   useEffect(() => {
     showScene(APP_SCENE.CAPTURE);
   }, []);
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
-      <View style={{ flex: 1 }}>
-        {getCurrentScene() == APP_SCENE.CAPTURE && (
-          <EngineView camera={cameraCapture} displayFrameRate={MAP_DEBUG} />
-        )}
+  return <SafeAreaView style={{
+    flex: 1,
+    backgroundColor: 'black'
+  }}>
+      <View style={{
+      flex: 1
+    }}>
+        {getCurrentScene() == APP_SCENE.CAPTURE && <EngineView camera={cameraCapture} displayFrameRate={MAP_DEBUG} />}
       </View>
-    </SafeAreaView>
-  );
-};
+    </SafeAreaView>;
+});

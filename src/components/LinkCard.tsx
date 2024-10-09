@@ -1,16 +1,18 @@
+import { memo } from "react";
 import React from 'react';
 import { TouchableWithoutFeedback, StyleSheet, Text, View } from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
-
 interface IProps {
   displayText: string;
   iconName: string;
   callback: () => void;
 }
-
-export const LinkCard = ({ iconName, displayText, callback }: IProps) => {
-  return (
-    <TouchableWithoutFeedback onPress={callback}>
+export const LinkCard = memo(({
+  iconName,
+  displayText,
+  callback
+}: IProps) => {
+  return <TouchableWithoutFeedback onPress={callback}>
       <View style={Styles.viewTouchable}>
         <View style={Styles.groupIconText}>
           <FeatherIcon name={iconName} size={20} color={'#5c5c5c'} />
@@ -18,10 +20,8 @@ export const LinkCard = ({ iconName, displayText, callback }: IProps) => {
         </View>
         <FeatherIcon name={'chevron-right'} size={20} color={'#5c5c5c'} />
       </View>
-    </TouchableWithoutFeedback>
-  );
-};
-
+    </TouchableWithoutFeedback>;
+});
 const Styles = StyleSheet.create({
   groupIconText: {
     alignSelf: 'center',

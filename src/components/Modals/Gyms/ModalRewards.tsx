@@ -1,52 +1,45 @@
+import { memo } from "react";
 import { images } from '@src/utils/utils';
 import React from 'react';
 import Modal from 'react-native-modal';
 import { View, Text, FlatList, StyleSheet, Image } from 'react-native';
 import { CustomButton } from '@src/components/CustomButton';
 import { TReward } from '@src/types/types';
-
 interface IProps {
   isVisible: boolean;
   callBack(): void;
   reward: TReward[];
 }
-
-export const ModalRewards = ({ isVisible, reward, callBack }: IProps) => {
-  const renderItem = ({ item }: { item: TReward }) => (
-    <View style={Styles.containerItem}>
+export const ModalRewards = memo(({
+  isVisible,
+  reward,
+  callBack
+}: IProps) => {
+  const renderItem = ({
+    item
+  }: {
+    item: TReward;
+  }) => <View style={Styles.containerItem}>
       <Text style={Styles.nameText}>{item.name}</Text>
       <View style={Styles.groupImageText}>
-        <Image
-          source={
-            images[`${'O-'}` + `${item.serial}`.toString().padStart(3, '0')]
-          }
-          style={Styles.cardImage}
-        />
+        <Image source={images[`${'O-'}` + `${item.serial}`.toString().padStart(3, '0')]} style={Styles.cardImage} />
         <Text>x{item.quantity}</Text>
       </View>
-    </View>
-  );
-
-  return (
-    <Modal isVisible={isVisible} onBackdropPress={callBack}>
+    </View>;
+  return <Modal isVisible={isVisible} onBackdropPress={callBack}>
       <View style={Styles.container}>
         <View style={Styles.modal}>
           <Text style={Styles.modalTitle}>Rewards Claimed 🏆</Text>
-          <FlatList
-            contentContainerStyle={{ marginVertical: 8 }}
-            data={reward}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-          />
+          <FlatList contentContainerStyle={{
+          marginVertical: 8
+        }} data={reward} renderItem={renderItem} keyExtractor={item => item.id} />
           <View style={Styles.containerButton}>
             <CustomButton title='Accept' type='primary' callback={callBack} />
           </View>
         </View>
       </View>
-    </Modal>
-  );
-};
-
+    </Modal>;
+});
 const Styles = StyleSheet.create({
   container: {
     flex: 1,

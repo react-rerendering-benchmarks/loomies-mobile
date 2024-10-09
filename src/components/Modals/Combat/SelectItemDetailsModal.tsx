@@ -1,55 +1,52 @@
+import { useCallback } from "react";
+import { memo } from "react";
 import { TItem } from '@src/types/types';
 import { images } from '@src/utils/utils';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { CustomButton } from '@src/components/CustomButton';
-
 interface iPropsSelectItemDetailsModal {
   isVisible: boolean;
   toggleVisibility: () => void;
-
   item: TItem;
   submitItem: (_itemId: string) => void;
 }
-
-export const SelectItemDetailsModal = (props: iPropsSelectItemDetailsModal) => {
+export const SelectItemDetailsModal = memo((props: iPropsSelectItemDetailsModal) => {
   const itemSerial = props.item.serial.toString().padStart(3, '0');
-
-  return (
-    <Modal isVisible={props.isVisible} onBackdropPress={props.toggleVisibility}>
+  return <Modal isVisible={props.isVisible} onBackdropPress={props.toggleVisibility}>
       <View style={Styles.container}>
         <View style={Styles.background}>
           <View style={Styles.cardImageBg} />
           <Image source={images[`O-${itemSerial}`]} style={Styles.itemImage} />
-          <Text style={{ ...Styles.modalText, ...Styles.itemQuantity }}>
+          <Text style={{
+          ...Styles.modalText,
+          ...Styles.itemQuantity
+        }}>
             x{props.item.quantity}
           </Text>
-          <Text style={{ ...Styles.modalText, ...Styles.itemName }}>
+          <Text style={{
+          ...Styles.modalText,
+          ...Styles.itemName
+        }}>
             {props.item.name}
           </Text>
-          <Text style={{ ...Styles.modalText, ...Styles.itemDescription }}>
+          <Text style={{
+          ...Styles.modalText,
+          ...Styles.itemDescription
+        }}>
             {props.item.description}
           </Text>
-          <CustomButton
-            title='Use now'
-            type='primary'
-            // send item id
-            callback={() => {
-              props.submitItem(props.item._id);
-            }}
-          />
-          <CustomButton
-            title='Close'
-            type='bordered'
-            callback={props.toggleVisibility}
-          />
+          <CustomButton title='Use now' type='primary'
+        // send item id
+        callback={useCallback(() => {
+          props.submitItem(props.item._id);
+        }, [])} />
+          <CustomButton title='Close' type='bordered' callback={props.toggleVisibility} />
         </View>
       </View>
-    </Modal>
-  );
-};
-
+    </Modal>;
+});
 const Styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -71,7 +68,9 @@ const Styles = StyleSheet.create({
     height: 110,
     position: 'absolute',
     top: 36,
-    transform: [{ rotate: '35deg' }],
+    transform: [{
+      rotate: '35deg'
+    }],
     width: 110
   },
   itemImage: {

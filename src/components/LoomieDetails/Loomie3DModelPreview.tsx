@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { memo } from "react";
 import * as Babylon from '@babylonjs/core';
 import { EngineView } from '@babylonjs/react-native';
 import { APP_SCENE, BabylonContext } from '@src/context/BabylonProvider';
@@ -5,32 +7,35 @@ import { ModelContext } from '@src/context/ModelProvider';
 import React, { useContext, useEffect, useState } from 'react';
 import { SafeAreaView, View } from 'react-native';
 import { instantiatedEntriesTranslate } from '../Map3D/utilsVertex';
-
 import { CONFIG } from '@src/services/config.services';
-const { MAP_DEBUG } = CONFIG;
-
+const {
+  MAP_DEBUG
+} = CONFIG;
 interface iLoomie3DModelPreview {
   serial: number;
   color: string;
 }
-
-export const Loomie3DModelPreview = ({
+export const Loomie3DModelPreview = memo(({
   serial,
   color
 }: iLoomie3DModelPreview) => {
-  const { sceneDetails, cameraDetails, getCurrentScene } =
-    useContext(BabylonContext);
-  const { instantiateModel, getModelHeight } = useContext(ModelContext);
-
-  const [model, setModel] = useState<Babylon.InstantiatedEntries | null>(null);
-
+  const {
+    sceneDetails,
+    cameraDetails,
+    getCurrentScene
+  } = useContext(BabylonContext);
+  const {
+    instantiateModel,
+    getModelHeight
+  } = useContext(ModelContext);
+  const model = useRef<Babylon.InstantiatedEntries | null>(null);
   useEffect(() => {
     if (!sceneDetails) return;
 
     // config camera
 
     if (cameraDetails) {
-      const camera = cameraDetails as Babylon.ArcRotateCamera;
+      const camera = (cameraDetails as Babylon.ArcRotateCamera);
 
       // not panning
       camera.panningSensibility = 0;
@@ -58,14 +63,11 @@ export const Loomie3DModelPreview = ({
       try {
         const model = await instantiateModel(serial.toString(), sceneDetails);
         if (!model) throw "Error: Couldn't instantiate model";
-        setModel(model);
+        model.current = model;
 
         // position model
         const height = await getModelHeight(serial.toString(), sceneDetails);
-        instantiatedEntriesTranslate(
-          model,
-          new Babylon.Vector3(0, -height / 2, 0)
-        );
+        instantiatedEntriesTranslate(model, new Babylon.Vector3(0, -height / 2, 0));
       } catch (error) {
         console.error(error);
       }
@@ -73,22 +75,18 @@ export const Loomie3DModelPreview = ({
 
     // dispose model
     return () => {
-      if (!model) return;
-      model.dispose();
+      if (!model.current) return;
+      model.current.dispose();
     };
   }, [sceneDetails]);
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color }}>
-      <View style={{ flex: 1 }}>
-        {getCurrentScene() == APP_SCENE.DETAILS && (
-          <EngineView
-            isTransparent={true}
-            camera={cameraDetails}
-            displayFrameRate={MAP_DEBUG}
-          />
-        )}
+  return <SafeAreaView style={{
+    flex: 1,
+    backgroundColor: color
+  }}>
+      <View style={{
+      flex: 1
+    }}>
+        {getCurrentScene() == APP_SCENE.DETAILS && <EngineView isTransparent={true} camera={cameraDetails} displayFrameRate={MAP_DEBUG} />}
       </View>
-    </SafeAreaView>
-  );
-};
+    </SafeAreaView>;
+});

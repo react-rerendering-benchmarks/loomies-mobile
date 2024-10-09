@@ -1,38 +1,26 @@
+import { memo } from "react";
 import React from 'react';
 import Modal from 'react-native-modal';
 import { CustomButton } from '../CustomButton';
 import { StyleSheet, Text, View } from 'react-native';
-
 interface IProps {
   isVisible: boolean;
   toggleVisibilityCallback(): void;
   acceptCallback(): void;
 }
-
-export const LogoutConfirmationModal = ({
+export const LogoutConfirmationModal = memo(({
   isVisible,
   toggleVisibilityCallback,
   acceptCallback
 }: IProps) => {
-  return (
-    <Modal
-      isVisible={isVisible}
-      onBackButtonPress={toggleVisibilityCallback}
-      onBackdropPress={toggleVisibilityCallback}
-    >
+  return <Modal isVisible={isVisible} onBackButtonPress={toggleVisibilityCallback} onBackdropPress={toggleVisibilityCallback}>
       <View style={Styles.container}>
         <Text style={Styles.modalText}>Are you sure you want to log out?</Text>
-        <CustomButton
-          title='Cancel'
-          type='bordered'
-          callback={toggleVisibilityCallback}
-        />
+        <CustomButton title='Cancel' type='bordered' callback={toggleVisibilityCallback} />
         <CustomButton title='Yes' type='primary' callback={acceptCallback} />
       </View>
-    </Modal>
-  );
-};
-
+    </Modal>;
+});
 const Styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',

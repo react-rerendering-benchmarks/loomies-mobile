@@ -1,42 +1,30 @@
+import { memo } from "react";
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { CustomButton } from './CustomButton';
-
 interface IProps {
   text: string;
   showButton?: boolean;
   buttonText?: string;
   buttonCallback?: () => void;
 }
-
-export const EmptyMessage = ({
+export const EmptyMessage = memo(({
   text,
   showButton,
   buttonText,
   buttonCallback
 }: IProps) => {
-  const renderButton = () => {
+  const renderButton = memo(() => {
     if (!showButton || !buttonText || !buttonCallback) return null;
-
-    return (
-      <CustomButton
-        type='primary'
-        title={buttonText}
-        callback={buttonCallback}
-      />
-    );
-  };
-
-  return (
-    <View style={Styles.container}>
+    return <CustomButton type='primary' title={buttonText} callback={buttonCallback} />;
+  });
+  return <View style={Styles.container}>
       <View style={Styles.box}>
         <Text style={Styles.boxText}>{text}</Text>
         {renderButton()}
       </View>
-    </View>
-  );
-};
-
+    </View>;
+});
 const Styles = StyleSheet.create({
   // Take the entire height and place the box in the center
   container: {
@@ -55,6 +43,7 @@ const Styles = StyleSheet.create({
     borderWidth: 3
     // Add a separation between the dots of the dotted border
   },
+
   boxText: {
     color: '#5C5C5C',
     textAlign: 'center'

@@ -1,66 +1,49 @@
+import { memo } from "react";
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { CustomButton } from '@src/components/CustomButton';
-
 interface IProps {
   isVisible: boolean;
   toggleVisibility?: () => void;
-
   title: string;
   description: string;
-
   labelOk?: string;
   labelCancel?: string;
-
   callbackOk: () => void;
   callbackCancel?: () => void;
 }
-
-export const GenericModal = ({
+export const GenericModal = memo(({
   isVisible,
   toggleVisibility,
-
   title,
   description,
-
   labelOk,
   labelCancel,
-
   callbackOk,
   callbackCancel
 }: IProps) => {
-  return (
-    <Modal
-      isVisible={isVisible}
-      onBackdropPress={toggleVisibility ? toggleVisibility : undefined}
-    >
+  return <Modal isVisible={isVisible} onBackdropPress={toggleVisibility ? toggleVisibility : undefined}>
       <View style={Styles.container}>
         <View style={Styles.background}>
-          <Text style={{ ...Styles.modalText, ...Styles.textTitle }}>
+          <Text style={{
+          ...Styles.modalText,
+          ...Styles.textTitle
+        }}>
             {title}
           </Text>
-          <Text style={{ ...Styles.modalText, ...Styles.textDescription }}>
+          <Text style={{
+          ...Styles.modalText,
+          ...Styles.textDescription
+        }}>
             {description}
           </Text>
-          <CustomButton
-            title={labelOk ? labelOk : 'Ok'}
-            type='primary'
-            callback={callbackOk}
-          />
-          {callbackCancel && (
-            <CustomButton
-              title={labelCancel ? labelCancel : 'Cancel'}
-              type='bordered'
-              callback={callbackCancel}
-            />
-          )}
+          <CustomButton title={labelOk ? labelOk : 'Ok'} type='primary' callback={callbackOk} />
+          {callbackCancel && <CustomButton title={labelCancel ? labelCancel : 'Cancel'} type='bordered' callback={callbackCancel} />}
         </View>
       </View>
-    </Modal>
-  );
-};
-
+    </Modal>;
+});
 const Styles = StyleSheet.create({
   container: {
     flex: 1,

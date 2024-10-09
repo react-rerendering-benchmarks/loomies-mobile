@@ -1,51 +1,46 @@
+import { memo } from "react";
 import { TInventoryItem } from '@src/types/types';
 import { images } from '@src/utils/utils';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { Pressable } from 'react-native';
-
 interface IProps {
   item: TInventoryItem;
   handleClickCallback?: (_: TInventoryItem) => void;
 }
-
-export const ItemCard = ({ item, handleClickCallback }: IProps) => {
+export const ItemCard = memo(({
+  item,
+  handleClickCallback
+}: IProps) => {
   const itemSerial = item.serial.toString().padStart(3, '0');
-
-  return (
-    <View style={Styles.card}>
-      <Pressable
-        onPress={() => {
-          // Call the callback if it exists and pass the item
-          handleClickCallback && handleClickCallback(item);
-        }}
-      >
+  return <View style={Styles.card}>
+      <Pressable onPress={() => {
+      // Call the callback if it exists and pass the item
+      handleClickCallback && handleClickCallback(item);
+    }}>
         <View style={Styles.spacing}>
           <View style={Styles.background}>
-            <Text style={{ ...Styles.itemQuantity, ...Styles.cardText }}>
+            <Text style={{
+            ...Styles.itemQuantity,
+            ...Styles.cardText
+          }}>
               x{item.quantity}
             </Text>
             <View style={Styles.cardImageBg} />
-            <Image
-              source={images[`O-${itemSerial}`]}
-              style={Styles.cardImage}
-            />
+            <Image source={images[`O-${itemSerial}`]} style={Styles.cardImage} />
             <View style={Styles.cardInfoContainer}>
-              <Text
-                style={{ ...Styles.cardInfoText, ...Styles.itemName }}
-                numberOfLines={2}
-                ellipsizeMode='tail'
-              >
+              <Text style={{
+              ...Styles.cardInfoText,
+              ...Styles.itemName
+            }} numberOfLines={2} ellipsizeMode='tail'>
                 {item.name}
               </Text>
             </View>
           </View>
         </View>
       </Pressable>
-    </View>
-  );
-};
-
+    </View>;
+});
 const Styles = StyleSheet.create({
   card: {
     flex: 1,
@@ -70,7 +65,9 @@ const Styles = StyleSheet.create({
     height: 110,
     position: 'absolute',
     top: 24,
-    transform: [{ rotate: '35deg' }],
+    transform: [{
+      rotate: '35deg'
+    }],
     width: 110
   },
   cardImage: {
